@@ -2,15 +2,16 @@ import serial
 import time
 
 
-header_H = 0x55 #Header
-header_L = 0xAA #Header
-device_Addr = 0xAB #Address
-data_Length = 0x01 #Data length
-set_Addr_CMD = 0x55 #Command: Set Device Address
-device_Addr_new = 0x22 #New Address: 0x22
-checksum = 0x22 #Distance checksum
+header_H = 0x55 # Header High
+header_L = 0xAA # Header Low
+device_addr = 0xAB # Address: Generic
+data_length = 0x01 # Data length
+set_addr_cmd = 0x55 # Command: Set Device Address
+device_addr_new = 0x22 # New Address: 0x22
 
-cmd = bytearray([header_H, header_L, device_Addr, data_Length, set_Addr_CMD, device_Addr_new, checksum])
+cmd = [header_H, header_L, device_addr, data_length, set_addr_cmd, device_addr_new]
+cmd.append(sum(cmd_d) & 0xff)
+cmd = bytes(cmd_d)
 
 ser = serial.Serial()
 ser.port = '/dev/ttyS0'
@@ -22,7 +23,6 @@ ser.timeout = 5
 #ser.write_timeout = 2
 print('Serial port data: ')
 print(ser)
-print()
 
 ser.open()
 print('Serial port open: ' + str(ser.is_open))
@@ -40,3 +40,4 @@ print('2nd to last byte: 0xCC if successful, 0xEE if failed')
 
 ser.close()
 print('Serial port closed: ' + str(not ser.is_open))
+exit()
