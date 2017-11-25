@@ -13,12 +13,14 @@ get_temp_cmd = 0x03 # Command: Read Temperature
 
 cmd_d = []
 cmd_t = []
-for i, dev in enumerate(device_addr):
+for dev in device_addr:
     # Distance Command Frame
+    cmd1 = []
     cmd1 = [header_H, header_L, dev, data_length, get_dist_cmd]
     cmd1.append(sum(cmd1) & 0xff)
     cmd_d.append(bytes(cmd1))
     # Temperature Command Frame
+    cmd2 = []
     cmd2 = [header_H, header_L, dev, data_length, get_temp_cmd]
     cmd2.append(sum(cmd2) & 0xff)
     cmd_t.append(bytes(cmd2))
