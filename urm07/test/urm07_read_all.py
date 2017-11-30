@@ -32,8 +32,8 @@ ser.baudrate = 19200
 ser.bytesize = 8
 ser.partiy = 'N'
 ser.stopbits = 1
-ser.timeout = 5
-#ser.write_timeout = 2
+ser.timeout = 1
+ser.write_timeout = 1
 # Output Serial Port Configuration
 print('Serial port data: ')
 print(ser)
@@ -45,46 +45,6 @@ if ser.is_open:
 else:
     print('Failed to open Serial Port. Exiting...')
     exit()
-
-# Print header for data output
-print('Device distances in (cm), temperature in (C).')
-print('|     0x22    |     0x33    |     0x44    |')
-print('| dist | temp | dist | temp | dist | temp |')
-c = 0
-dist = []
-temp = []
-while c < 100:
-    c += 1
-    # Iterate over devices
-    for i in range(len(device_addr)):
-        # Write Distance TX Command
-        if (ser.write(cmd_d[i]) != 8):
-            print('Failed to write cmd_d. Exiting...')
-            cleanup()
-        time.sleep(0.01) # Sleep after writing
-        # Read distance RX frame and check for valid data
-        dist[i] = data_check(ser.read(8), 8)
-        time.sleep(0.01) # Sleep after reading
-
-        # Write Temperature TX Command
-        if (ser.write(cmd_t[i]) != 8):
-            print('Failed to write cmd_t. Exiting...')
-            cleanup()
-        time.sleep(0.01) # Sleep after writing
-        # Read Temperature RX Frame and check for valid data
-        temp[i] = data_check(ser.read(8), 8)
-        # Convert temp to cm
-        if temp[i] != 'NaN':
-            temp[i] = 0.1 * temp[i]
-
-    # Print Distance | Temperature
-    print('\r| {0:4} | {1:4} | {2:4} | {3:4} | {4:4} | {5:4} |'
-    .format(dist[0],dist[1],dist[2],temp[0],temp[1],temp[2]), end='')
-
-    # Sleep for sample time
-    time.sleep(sample_time)
-
-cleanup()
 
 ###############################################################################
 
@@ -110,6 +70,52 @@ def data_check(frame, len_frame):
         if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
             return ((frame[-3]<<8) | frame[-2]) # Pass valid data
         else: # Checksum failed
-            return 'NaN'
+            return 'NaNc'
     else: # Data frame incomplete
-        return 'NaN'
+        return 'NaNi'
+
+###############################################################################
+
+# Print header for data output
+print('Device distances in (cm), temperature in (C).')
+print('|     0x22    |     0x33    |     0x44    |')
+print('| dist | temp | dist | temp | dist | temp |')
+c = 0
+dist = [0, 0, 0]
+temp = [0.0, 0.0, 0.0]
+while c < 100:
+    c += 1
+    # Iterate over devices
+    for i in range(len(device_addr)):
+            # Write Distance TX Command
+        if (ser.write(cmd_d[i]) != 6):
+            print('Failed to write cmd_d. Exiting...')
+            cleanup()
+        time.sleep(0.01) # Sleep after writing
+        # Read distance RX frame and check for valid data
+        dist[i] = data_check(ser.read(8), 8)
+        time.sleep(0.01) # Sleep after reading
+
+        # Write Temperature TX Command
+        if c%5 == 0:
+            if (ser.write(cmd_t[i]) != 6):
+                print('Failed to write cmd_t. Exiting...')
+                cleanup()
+            time.sleep(0.01) # Sleep after writing
+            # Read Temperature RX Frame and check for valid data
+            temp[i] = data_check(ser.read(8), 8)
+            # Convert temp to cm
+            if temp[i] != 'NaNi' and temp[i] != 'NaNc':
+                temp[i] = 0.1 * temp[i]
+            else:
+                temp[i] = 0.0
+            time.sleep(0.01) # Sleep after reading
+
+    # Print Distance | Temperature
+    print('\r| {0:4} | {1:4.1f} | {2:4} | {3:4.1f} | {4:4} | {5:4.1f} |'
+    .format(dist[0],temp[0],dist[1],temp[1],dist[2],temp[2]), end='')
+
+    # Sleep for sample time
+    #time.sleep(sample_time)
+
+cleanup()

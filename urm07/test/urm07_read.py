@@ -8,10 +8,11 @@ header_H = 0x55 # Header High
 header_L = 0xAA # Header Low
 
 # Device Addresses
-device_addr = 0xAB # Address: Generic
+#device_addr = 0xAB # Address: Generic
+#device_addr = 0x11 # Address: Factory
 #device_addr = 0x22 # Address: 0x22
 #device_addr = 0x33 # Address: 0x33
-#device_addr = 0x44 # Address: 0x44
+device_addr = 0x44 # Address: 0x44
 
 data_length = 0x00 # Data length
 get_dist_cmd = 0x02 # Command: Read Distance
@@ -48,6 +49,19 @@ else:
     print('Failed to open Serial Port. Exiting...')
     exit()
 
+''' data_check(frame, len_frame)
+Description: Pass a frame of bytes and the expected frame length. Returns value
+per command on success. Returns NaN on failure.
+'''
+def data_check(frame, len_frame):
+    if (len(frame) == len_frame): # Check for complete frame
+        if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
+            return ((frame[-3]<<8) | frame[-2]) # Pass valid data
+        else: # Checksum failed
+            return 'NaN'
+    else: # Data frame incomplete
+        return 'NaN'
+
 # Print header for data output
 print('Distance (cm) | Temperature (C)')
 c = 0
@@ -55,7 +69,7 @@ while c < 100:
     c += 1
 
     # Write Distance TX Command
-    if (ser.write(cmd_d) != 8):
+    if (ser.write(cmd_d) != 6):
         print('Failed to write cmd_d.')
     time.sleep(0.01) # Sleep after writing
     # Read distance RX frame and check for valid data
@@ -63,7 +77,7 @@ while c < 100:
     time.sleep(0.01) # Sleep after reading
 
     # Write Temperature TX Command
-    if (ser.write(cmd_t) != 8):
+    if (ser.write(cmd_t) != 6):
         print('Failed to write cmd_t.')
     time.sleep(0.01) # Sleep after writing
     # Read Temperature RX Frame and check for valid data
@@ -71,9 +85,11 @@ while c < 100:
     # Convert temp to cm
     if temp != 'NaN':
         temp = 0.1 * temp
+    else:
+        temp = 0.0
 
     # Print Distance | Temperature
-    print('\r{0:3} | {1:4}'.format(dist, temp), end='')
+    print('\r{0:3} | {1:4.1f}'.format(dist, temp), end='')
 
     # Sleep for sample time
     time.sleep(sample_time)
@@ -87,16 +103,3 @@ if not ser.is_open:
 else:
     print('Failed to close Serial Port. Trying again')
     ser.close()
-
-''' data_check(frame, len_frame)
-Description: Pass a frame of bytes and the expected frame length. Returns value
-per command on success. Returns NaN on failure.
-'''
-def data_check(frame, len_frame):
-    if (len(frame) == len_frame): # Check for complete frame
-        if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
-            return ((frame[-3]<<8) | frame[-2]) # Pass valid data
-        else: # Checksum failed
-            return 'NaN'
-    else: # Data frame incomplete
-        return 'NaN'
