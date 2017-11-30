@@ -1,25 +1,25 @@
-import sys
 import serial
 import time
 
 class ultrasonic:
 
     def __init__(self):
+        # Command Frame Header
+        header_H = 0x55 # Header High
+        header_L = 0xAA # Header Low
+        self.device_addr = [0x22, 0x33, 0x44] # Device addresses
+        data_length = 0x00 # Data length
+        get_dist_cmd = 0x02 # Command: Read Distance
 
-        self.dataArray = [1,2,3]
+        self.cmd_d = []
+        for dev in self.device_addr:
+            # Distance Command Frame
+            cmd = []
+            cmd = [header_H, header_L, dev, data_length, get_dist_cmd]
+            cmd.append(sum(cmd) & 0xff)
+            self.cmd_d.append(bytes(cmd))
 
-        sleep_time = 0.05
-
-        header_H = 0x55 #Header
-        header_L = 0xAA #Header
-        device_Addr = 0x22 #Address
-        data_Length = 0x00 #Data length
-        get_Dis_CMD = 0x02 #Command: Read Distance
-
-        self.frame_tx = [header_H, header_L, device_Addr, data_Length, get_Dis_CMD]
-        self.frame_tx.append(sum(self.frame_x) & 0xff)
-        self.frame_tx = bytes(self.frame_tx)
-
+        # Serial Port Configuration
         self.ser = serial.Serial()
         self.ser.port = '/dev/ttyS0'
         self.ser.baudrate = 19200
@@ -27,34 +27,47 @@ class ultrasonic:
         self.ser.partiy = 'N'
         self.ser.stopbits = 1
         self.ser.timeout = 5
-        #ser.write_timeout = 2
+
+        # Open Serial Port and check it's open
         self.ser.open()
-#        print('Serial port data: ')
-#        print(ser)
-        print("Adding ultrasonic")
+        if self.ser.is_open:
+            print('URM07: Serial port opened.')
+        else:
+            print('URM07: Failed to open Serial Port.')
 
-    def update(self):
-
-        self.ser.write(self.frame_tx)
-        self.frame_rx = ser.read(8)
-        print(self.frame_rx[6])
-        time.sleep(sleep_time)
-        self.dataArray = frame_rx[6]
-        #if not self.on:
-         #   break
-    def shutdown(self):
-
-        self.on = False
-        print ("stopping ultSensors")
-        ser.close()
-        print('Serial port closed: ' + str(not ser.is_open))
+        ''' data = data_check(frame, len_frame)
+        Description: Pass a frame of bytes and the expected frame length. Returns value
+        per command on success. Returns NaN on failure.
+        '''
+        def data_check(frame, len_frame):
+            if (len(frame) == len_frame): # Check for complete frame
+                if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
+                    return ((frame[-3]<<8) | frame[-2]) # Pass valid data
+                else: # Checksum failed
+                    return '998'
+            else: # Data frame incomplete
+                return '999'
 
     def run(self):
-        self.ser.write(self.frame_tx)
-        self.frame_rx = self.ser.read(8)
-        #print(self.frame_rx[6])
-        #time.sleep(sleep_time)
-        self.dataArray = [self.frame_rx[6], self.frame_rx[6], self.frame_rx[6]]
-        print(self.dataArray)
-        #print(frame_rx[6])
-        return self.dataArray
+        dist = [0, 0, 0]
+        for i in range(len(self.device_addr)):
+            # Write Distance TX Command
+            if (self.ser.write(self.cmd_d[i]) != 6):
+                print('URM07: Failed to write cmd_d.')
+            time.sleep(0.005) # Sleep after writing
+            # Read distance RX frame and check for valid data
+            #dist[i] = data_check(self.ser.read(8), 8)
+            dist[i] = self.ser.read(8)
+            dist[i] = dist[i][6]
+            time.sleep(0.005) # Sleep after reading
+        print(dist)
+        return dist
+
+    def shutdown(self):
+        print('Shutting down URM07')
+        self.ser.close()
+        if not self.ser.is_open:
+            print('URM07: Serial port closed.')
+        else:
+            print('URM07: Failed to close Serial Port. Trying again...')
+            self.ser.close()
