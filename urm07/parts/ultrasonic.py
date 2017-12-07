@@ -1,3 +1,16 @@
+'''
+* File: ultrasonic.py
+* Author: Parker Brown
+* Date: 12/7/2017
+* Course: MAE 198, Fall 2017
+* Description: Code is a "part" for the donkeycar python package. Include this
+* part under donkeycar/parts/sensors to include the URM07 ultrasonic sensor
+* for the donkeycar. Documentation for the sensors can be found here:
+* https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
+* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* 8 (TX) and 10 (RX), and the 3.3V power supply.
+'''
+
 import serial
 import time
 
@@ -25,6 +38,7 @@ class ultrasonic:
         data_length = 0x00 # Data length
         get_dist_cmd = 0x02 # Command: Read Distance
 
+        # Iterate over devices to make individual commands
         self.cmd_d = []
         for dev in self.device_addr:
             # Distance Command Frame
@@ -35,6 +49,7 @@ class ultrasonic:
 
         # Filter coefficients
         self.filter_coeff = [0.6, 0.4]
+        # Initialize data variables
         self.dist = [0, 0, 0]
         self.dist_f = [0, 0, 0]
         self.last_dist_f = [0, 0, 0]
@@ -56,6 +71,7 @@ class ultrasonic:
             print('URM07: Failed to open Serial Port.')
 
     def run(self):
+        # Iterate through sensors
         for i in range(len(self.device_addr)):
             # Write Distance TX Command
             if (self.ser.write(self.cmd_d[i]) != 6):
@@ -66,10 +82,9 @@ class ultrasonic:
             # Filtering
             self.dist_f[i] = self.filter_coeff[0] * self.dist[i] + self.filter_coeff[1] * self.last_dist_f[i]
             self.last_dist_f[i] = self.dist_f[i]
-
             time.sleep(0.01) # Sleep after reading
+
         print('{0:5.1f} {1:5.1f} {2:5.1f}'.format(self.dist_f[0], self.dist_f[1], self.dist_f[2]))
-        # print('{0:3} {1:5.3f} {2:5.3f}'.format(self.dist[0], self.last_dist_f[0], self.dist_f[0]))
         return self.dist_f
 
     def shutdown(self):
