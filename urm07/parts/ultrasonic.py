@@ -34,7 +34,10 @@ class ultrasonic:
             self.cmd_d.append(bytes(cmd))
 
         # Filter coefficients
-        self.filter_coeff = [0.4, 0.6]
+        self.filter_coeff = [0.6, 0.4]
+        self.dist = [0, 0, 0]
+        self.dist_f = [0, 0, 0]
+        self.last_dist_f = [0, 0, 0]
 
         # Serial Port Configuration
         self.ser = serial.Serial()
@@ -53,17 +56,21 @@ class ultrasonic:
             print('URM07: Failed to open Serial Port.')
 
     def run(self):
-        dist = [0, 0, 0]
         for i in range(len(self.device_addr)):
             # Write Distance TX Command
             if (self.ser.write(self.cmd_d[i]) != 6):
                 print('URM07: Failed to write cmd_d.')
             time.sleep(0.01) # Sleep after writing
             # Read distance RX frame and check for valid data
-            dist[i] = data_check(self.ser.read(8), 8)
+            self.dist[i] = data_check(self.ser.read(8), 8)
+            # Filtering
+            self.dist_f[i] = self.filter_coeff[0] * self.dist[i] + self.filter_coeff[1] * self.last_dist_f[i]
+            self.last_dist_f[i] = self.dist_f[i]
+
             time.sleep(0.01) # Sleep after reading
-        print('{0:5.1f} {1:5.1f} {2:5.1f}'.format(dist[0], dist[1], dist[2]))
-        return dist
+        print('{0:5.1f} {1:5.1f} {2:5.1f}'.format(self.dist_f[0], self.dist_f[1], self.dist_f[2]))
+        # print('{0:3} {1:5.3f} {2:5.3f}'.format(self.dist[0], self.last_dist_f[0], self.dist_f[0]))
+        return self.dist_f
 
     def shutdown(self):
         print('Shutting down URM07')
