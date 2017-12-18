@@ -6,7 +6,7 @@
 * Description: Script sets device baud rate.
 * Documentation for the sensors can be found here:
 * https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
-* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* URM07 sensors must be connected to the Raspberry Pi UART interface, header pins
 * 8 (TX) and 10 (RX), and the 3.3V power supply.
 '''
 

@@ -3,11 +3,11 @@
 * Author: Parker Brown
 * Date: 12/7/2017
 * Course: MAE 198, Fall 2017
-* Description: Script reads distance and temperature measurements from sensor
-* at specified device address.
+* Description: Script reads distance measurements from sensor at specified device
+* address and applies a first order low pass filter to the raw data.
 * Documentation for the sensors can be found here:
 * https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
-* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* URM07 sensors must be connected to the Raspberry Pi UART interface, header pins
 * 8 (TX) and 10 (RX), and the 3.3V power supply.
 '''
 
