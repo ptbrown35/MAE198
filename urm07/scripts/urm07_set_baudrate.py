@@ -1,3 +1,15 @@
+'''
+* File: urm07_set_baudrate.py
+* Author: Parker Brown
+* Date: 12/7/2017
+* Course: MAE 198, Fall 2017
+* Description: Script sets device baud rate.
+* Documentation for the sensors can be found here:
+* https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
+* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* 8 (TX) and 10 (RX), and the 3.3V power supply.
+'''
+
 import serial
 import time
 

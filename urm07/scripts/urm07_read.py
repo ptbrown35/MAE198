@@ -1,3 +1,16 @@
+'''
+* File: urm07_read.py
+* Author: Parker Brown
+* Date: 12/7/2017
+* Course: MAE 198, Fall 2017
+* Description: Script reads distance and temperature measurements from sensor
+* at specified device address.
+* Documentation for the sensors can be found here:
+* https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
+* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* 8 (TX) and 10 (RX), and the 3.3V power supply.
+'''
+
 import serial
 import time
 
@@ -49,25 +62,42 @@ else:
     print('Failed to open Serial Port. Exiting...')
     exit()
 
-''' data_check(frame, len_frame)
-Description: Pass a frame of bytes and the expected frame length. Returns value
-per command on success. Returns NaN on failure.
+###############################################################################
+
+def cleanup():
+''' cleanup()
+Description: Cleanup function closes serial port and exits.
 '''
+    print('')
+    ser.close()
+    if not ser.is_open:
+        print('Serial port closed.')
+    else:
+        print('Failed to close Serial Port. Trying again')
+        ser.close()
+    exit()
+
 def data_check(frame, len_frame):
+''' data = data_check(frame, len_frame)
+Description: Pass a frame of bytes and the expected frame length. Returns value
+per command on success. Returns 998 on checksum failure and 999 with incomplete
+* data.
+'''
     if (len(frame) == len_frame): # Check for complete frame
         if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
             return ((frame[-3]<<8) | frame[-2]) # Pass valid data
         else: # Checksum failed
-            return 'NaN'
+            return 998
     else: # Data frame incomplete
-        return 'NaN'
+        return 999
+
+###############################################################################
 
 # Print header for data output
 print('Distance (cm) | Temperature (C)')
 c = 0
 while c < 100:
     c += 1
-
     # Write Distance TX Command
     if (ser.write(cmd_d) != 6):
         print('Failed to write cmd_d.')
@@ -83,7 +113,7 @@ while c < 100:
     # Read Temperature RX Frame and check for valid data
     temp = data_check(ser.read(8), 8)
     # Convert temp to cm
-    if temp != 'NaN':
+    if temp != 998 and temp != 999:
         temp = 0.1 * temp
     else:
         temp = 0.0
@@ -94,12 +124,5 @@ while c < 100:
     # Sleep for sample time
     time.sleep(sample_time)
 
-print('')
-
 # Cleanup
-ser.close()
-if not ser.is_open:
-    print('Serial port closed.')
-else:
-    print('Failed to close Serial Port. Trying again')
-    ser.close()
+cleanup()

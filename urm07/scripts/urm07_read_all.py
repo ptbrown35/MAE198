@@ -1,3 +1,17 @@
+'''
+* File: urm07_read_all.py
+* Author: Parker Brown
+* Date: 12/7/2017
+* Course: MAE 198, Fall 2017
+* Description: Script reads distance and temperature measurements from sensors
+* at specified device address.
+* Documentation for the sensors can be found here:
+* https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
+* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* 8 (TX) and 10 (RX), and the 3.3V power supply; they can be daisy chained with
+* unique device addresses.
+'''
+
 import serial
 import time
 
@@ -48,10 +62,10 @@ else:
 
 ###############################################################################
 
+def cleanup():
 ''' cleanup()
 Description: Cleanup function closes serial port and exits.
 '''
-def cleanup():
     print('')
     ser.close()
     if not ser.is_open:
@@ -61,18 +75,19 @@ def cleanup():
         ser.close()
     exit()
 
+def data_check(frame, len_frame):
 ''' data = data_check(frame, len_frame)
 Description: Pass a frame of bytes and the expected frame length. Returns value
-per command on success. Returns NaN on failure.
+per command on success. Returns 998 on checksum failure and 999 with incomplete
+* data.
 '''
-def data_check(frame, len_frame):
     if (len(frame) == len_frame): # Check for complete frame
         if ((sum(frame[0:-1]) & 0xff) == frame[-1]): # Check checksum
             return ((frame[-3]<<8) | frame[-2]) # Pass valid data
         else: # Checksum failed
-            return 'NaNc'
+            return 998
     else: # Data frame incomplete
-        return 'NaNi'
+        return 999
 
 ###############################################################################
 
@@ -97,7 +112,7 @@ while c < 100:
         time.sleep(0.01) # Sleep after reading
 
         # Write Temperature TX Command
-        if c%5 == 0:
+        if c%5 == 0: # Only get temp every 5 iterations
             if (ser.write(cmd_t[i]) != 6):
                 print('Failed to write cmd_t. Exiting...')
                 cleanup()
@@ -105,7 +120,7 @@ while c < 100:
             # Read Temperature RX Frame and check for valid data
             temp[i] = data_check(ser.read(8), 8)
             # Convert temp to cm
-            if temp[i] != 'NaNi' and temp[i] != 'NaNc':
+            if temp[i] != 998 and temp[i] != 999:
                 temp[i] = 0.1 * temp[i]
             else:
                 temp[i] = 0.0
@@ -116,6 +131,7 @@ while c < 100:
     .format(dist[0],temp[0],dist[1],temp[1],dist[2],temp[2]), end='')
 
     # Sleep for sample time
-    #time.sleep(sample_time)
+    time.sleep(sample_time)
 
+# Cleanup
 cleanup()

@@ -1,10 +1,21 @@
+'''
+* File: urm07_set_address.py
+* Author: Parker Brown
+* Date: 12/7/2017
+* Course: MAE 198, Fall 2017
+* Description: Script sets unique device address.
+* Documentation for the sensors can be found here:
+* https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153
+* URM07 sensors must be connected to the Rasperry Pi UART interface, header pins
+* 8 (TX) and 10 (RX), and the 3.3V power supply.
+'''
+
 import serial
 import time
 
-
 header_H = 0x55 # Header High
 header_L = 0xAA # Header Low
-device_addr = 0x11 # Address: Generic
+device_addr = 0xAB # Address: Generic
 data_length = 0x01 # Data length
 set_addr_cmd = 0x55 # Command: Set Device Address
 device_addr_new = 0x44 # New Address: 0x22
