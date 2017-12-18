@@ -12,6 +12,8 @@ Script reads distance measurements from sensor at specified device address and a
 Script sets unique device address.
 #### urm07_set_baudrate.py
 Script sets device baud rate.
+#### ultrasonic.py
+Script is a "part" for the [donkeyar](http://docs.donkeycar.com/) code base, returning filtered distance data to the autopilot.
 ## Hardware
 Documentation for the sensors can be found [here](https://www.dfrobot.com/wiki/index.php/URM07-UART_Ultrasonic_Sensor_SKU:_SEN0153).
 URM07 sensors must be connected to the Raspberry Pi UART interface, header pins 8 (TX) and 10 (RX), and the 3.3V power supply; they can be daisy chained with unique device addresses.
